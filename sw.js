@@ -1,4 +1,4 @@
-const CACHE = "study-vault-v2";
+const CACHE = "study-vault-v3";
 const SHELL = ["./", "./index.html", "./styles.css", "./app.js"];
 
 self.addEventListener("install", (event) => {
@@ -17,13 +17,20 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // Network-first: a redeploy (including a key rotation) must reach the device.
+  // Cache is only a fallback so the library still opens offline.
   event.respondWith(
-    caches.match(event.request).then((cached) =>
-      cached || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        }
         return response;
       })
-    )
+      .catch(() => caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        throw new Error("Offline and not cached");
+      }))
   );
 });
