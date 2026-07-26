@@ -129,14 +129,14 @@ unlockForm.addEventListener("submit", async (event) => {
     const manifestBytes = await decryptAsset("./vault/manifest.bin", candidate);
     const manifest = JSON.parse(decoder.decode(manifestBytes));
     password = candidate;
-    sessionStorage.setItem("study-vault-password", candidate);
+    localStorage.setItem("study-vault-password", candidate);
     renderLibrary(manifest);
     unlockPanel.hidden = true;
     library.hidden = false;
     passwordInput.value = "";
   } catch (error) {
     console.error(error);
-    sessionStorage.removeItem("study-vault-password");
+    localStorage.removeItem("study-vault-password");
     unlockStatus.classList.add("error");
     unlockStatus.textContent = "パスワードが違うか、データを取得できません。";
     passwordInput.select();
@@ -148,12 +148,12 @@ unlockForm.addEventListener("submit", async (event) => {
 lockButton.addEventListener("click", () => {
   closeReader();
   password = "";
-  sessionStorage.removeItem("study-vault-password");
+  localStorage.removeItem("study-vault-password");
   documentList.replaceChildren();
   library.hidden = true;
   unlockPanel.hidden = false;
   unlockStatus.classList.remove("error");
-  unlockStatus.textContent = "内容は端末内で復号されます。";
+  unlockStatus.textContent = "ロックしました。この端末に記憶したパスワードも削除しました。";
   passwordInput.focus();
 });
 
@@ -167,7 +167,7 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(console.error);
 }
 
-const savedPassword = sessionStorage.getItem("study-vault-password");
+const savedPassword = localStorage.getItem("study-vault-password");
 if (savedPassword) {
   passwordInput.value = savedPassword;
   unlockForm.requestSubmit();
